@@ -42,6 +42,7 @@ new minB maxB = do
       , intSetInBounds#  = set
       , intSetOutBounds# = outBounds
       }
+{-# SPECIALIZE new :: Word64 -> Word64 -> IO (IntSet (PrimState IO)) #-}
 
 add :: PrimMonad m => IntSet (PrimState m) -> Word64 -> m ()
 add set n =
@@ -58,6 +59,7 @@ add set n =
         m <- readMutVar (intSetOutBounds# set)
         let !m' = CIS.insert (fromIntegral n) m
         writeMutVar (intSetOutBounds# set) m'
+{-# SPECIALIZE add :: IntSet (PrimState IO) -> Word64 -> IO () #-}
 
 check :: PrimMonad m => IntSet (PrimState m) -> Word64 -> m Bool
 check set n =
@@ -72,3 +74,4 @@ check set n =
     else do
         m <- readMutVar (intSetOutBounds# set)
         return $! CIS.member (fromIntegral n) m
+{-# SPECIALIZE check :: IntSet (PrimState IO) -> Word64 -> IO Bool #-}
