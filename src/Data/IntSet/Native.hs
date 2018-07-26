@@ -31,7 +31,7 @@ new :: PrimMonad m
     => Word64 -- ^ Minimum bound of the integer set
     -> Word64 -- ^ Maximum bound of the integer set
     -> m (IntSet (PrimState m))
-new minB maxB = do
+new !minB !maxB = do
     let !numInBounds = (maxB - minB) `div` 8 + 1
     set <- newByteArray (fromIntegral numInBounds)
     fillByteArray set 0 (fromIntegral numInBounds) 0
@@ -45,7 +45,7 @@ new minB maxB = do
 {-# SPECIALIZE new :: Word64 -> Word64 -> IO (IntSet (PrimState IO)) #-}
 
 add :: PrimMonad m => IntSet (PrimState m) -> Word64 -> m ()
-add set n =
+add !set !n =
     if n >= intSetMinBound# set && n <= intSetMaxBound# set then do
         let !n' = n - intSetMinBound# set
         let !o    = fromIntegral $ n' `div` 64
@@ -62,7 +62,7 @@ add set n =
 {-# SPECIALIZE add :: IntSet (PrimState IO) -> Word64 -> IO () #-}
 
 check :: PrimMonad m => IntSet (PrimState m) -> Word64 -> m Bool
-check set n =
+check !set !n =
     if n >= intSetMinBound# set && n <= intSetMaxBound# set then do
         let !n' = n - intSetMinBound# set
         let !o    = fromIntegral $ n' `div` 64

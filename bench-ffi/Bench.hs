@@ -12,9 +12,10 @@ import qualified Data.Vector as V
 
 import qualified Data.HashSet as HashSet
 import qualified Data.IntSet as Containers
-import qualified Data.Set as Set
-import qualified Data.IntSet.Native as Native
 import qualified Data.IntSet.FFI as FFI
+import qualified Data.IntSet.GHC as ISGHC
+import qualified Data.IntSet.Native as Native
+import qualified Data.Set as Set
 
 import System.Random
 
@@ -32,6 +33,12 @@ main = defaultMain [
                     , let n = 1000*1000;    !v = generateInts 0 n (fromIntegral n)  in bench (show n)  $ whnfIO (intsetNative 0 n v)
                     , let n = 10*1000*1000; !v = generateInts 0 n (fromIntegral n)  in bench (show n)  $ whnfIO (intsetNative 0 n v)
                     ]
+  , bgroup "ghc" [ let n = 1000;         !v = generateInts 0 n (fromIntegral n)  in bench (show n)  $ whnfIO (intsetGHC 0 n v)
+                 , let n = 10*1000;      !v = generateInts 0 n (fromIntegral n)  in bench (show n)  $ whnfIO (intsetGHC 0 n v)
+                 , let n = 100*1000;     !v = generateInts 0 n (fromIntegral n)  in bench (show n)  $ whnfIO (intsetGHC 0 n v)
+                 , let n = 1000*1000;    !v = generateInts 0 n (fromIntegral n)  in bench (show n)  $ whnfIO (intsetGHC 0 n v)
+                 , let n = 10*1000*1000; !v = generateInts 0 n (fromIntegral n)  in bench (show n)  $ whnfIO (intsetGHC 0 n v)
+                 ]
   , bgroup "containers" [ let n = 1000;         !v = generateInts 0 n (fromIntegral n) in bench (show n) $ whnfIO (intsetContainers v)
                         , let n = 10*1000;      !v = generateInts 0 n (fromIntegral n) in bench (show n) $ whnfIO (intsetContainers v)
                         , let n = 100*1000;     !v = generateInts 0 n (fromIntegral n) in bench (show n) $ whnfIO (intsetContainers v)
@@ -70,6 +77,18 @@ intsetNative minB maxB xs = do
     forM_ xs $ \i -> do
         Native.add s i
         f <- Native.check s i
+        unless f $
+            throwIO $ userError "implementation errors"
+
+intsetGHC :: Word64
+          -> Word64
+          -> Vector Word64
+          -> IO ()
+intsetGHC minB maxB xs = do
+    s <- ISGHC.new minB maxB
+    forM_ xs $ \i -> do
+        ISGHC.add s i
+        f <- ISGHC.check s i
         unless f $
             throwIO $ userError "implementation errors"
 

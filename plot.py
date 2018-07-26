@@ -14,6 +14,7 @@ BGROUPS = [
     'hashset',
     'containers',
     'native',
+    'ghc',
     'ffi',
     ]
 
@@ -86,7 +87,11 @@ def main():
     fig, ax = plt.subplots()
     groups = []
     for g in BGROUPS:
-        bs = bench[g]
+        try:
+            bs = bench[g]
+        except KeyError:
+            continue
+
         groups.append(g)
         ind = np.array([all_configs[b.configuration()] for b in bs])
         means = [b.analysis.mean.value for b in bs]
