@@ -61,6 +61,7 @@ main = defaultMain [
   , bgroup "hashset" [ let n = 1000;         !v = generateInts 0 n (fromIntegral n) in bench (show n) $ whnfIO (intsetHashSet v)
                      , let n = 10*1000;      !v = generateInts 0 n (fromIntegral n) in bench (show n) $ whnfIO (intsetHashSet v)
                      , let n = 100*1000;     !v = generateInts 0 n (fromIntegral n) in bench (show n) $ whnfIO (intsetHashSet v)
+                     , let n = 1000*1000;    !v = generateInts 0 n (fromIntegral n) in bench (show n) $ whnfIO (intsetHashSet v)
                      , let n = 10*1000*1000; !v = generateInts 0 n (fromIntegral n) in bench (show n) $ whnfIO (intsetHashSet v)
                      ]
   ]
