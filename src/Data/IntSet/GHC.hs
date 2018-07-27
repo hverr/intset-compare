@@ -9,7 +9,7 @@ import Data.Bits
 import Data.Word (Word64)
 
 import GHC.Exts (Int(..), RealWorld,
-                 MutableByteArray#, newByteArray#, setByteArray#,
+                 MutableByteArray#, newPinnedByteArray#, setByteArray#,
                  readWord64Array#, writeWord64Array#,
                  MutVar#, newMutVar#,
                  readMutVar#, writeMutVar#)
@@ -31,7 +31,7 @@ new !minB !maxB =
     let !numInBounds = (maxB - minB) `div` 8 + 1 in
     case fromIntegral numInBounds of { I# numInBounds# ->
     IO $ \s0 ->
-        case newByteArray# numInBounds# s0 of { (# s1, mba #) ->
+        case newPinnedByteArray# numInBounds# s0 of { (# s1, mba #) ->
         case setByteArray# mba 0# numInBounds# 0# s1 of { s2 ->
         case newMutVar# CIS.empty s2 of { (# s3, mv #) ->
         (# s3, IntSet { intSetMinBound#  = minB
@@ -44,10 +44,10 @@ add :: IntSet -> Word64 -> IO ()
 add !set !n =
     if n >= intSetMinBound# set && n <= intSetMaxBound# set then
         let !n' = n - intSetMinBound# set
-            !i    = fromIntegral $ n' `rem` 64
+            !i    = fromIntegral $ n' .&. 63
             !mask = (1 :: Word64) `shiftL` i
         in
-        case fromIntegral $ n' `div` 64 of { I# o ->
+        case fromIntegral $ n' `shiftR` 6 of { I# o ->
         IO $ \s0 ->
             case readWord64Array# (intSetInBounds# set) o s0 of { (# s1, b #) ->
             case W64# b .|. mask of { W64# b' ->
@@ -64,10 +64,10 @@ check :: IntSet -> Word64 -> IO Bool
 check !set !n =
     if n >= intSetMinBound# set && n <= intSetMaxBound# set then
         let !n' = n - intSetMinBound# set
-            !i    = fromIntegral $ n' `rem` 64
+            !i    = fromIntegral $ n' .&. 63
             !mask = (1 :: Word64) `shiftL` i
         in
-        case fromIntegral $ n' `div` 64 of { I# o ->
+        case fromIntegral $ n' `shiftR` 6 of { I# o ->
         IO $ \s0 ->
             case readWord64Array# (intSetInBounds# set) o s0 of { (# s1, b #) ->
             let !f = (W64# b .&. mask) /= 0 in

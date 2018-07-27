@@ -15,6 +15,7 @@ import qualified Data.IntSet as Containers
 import qualified Data.IntSet.FFI as FFI
 import qualified Data.IntSet.GHC as ISGHC
 import qualified Data.IntSet.Native as Native
+import qualified Data.IntSet.NativeDiv as NativeDiv
 import qualified Data.Set as Set
 
 import System.Random
@@ -33,6 +34,12 @@ main = defaultMain [
                     , let n = 1000*1000;    !v = generateInts 0 n (fromIntegral n)  in bench (show n)  $ whnfIO (intsetNative 0 n v)
                     , let n = 10*1000*1000; !v = generateInts 0 n (fromIntegral n)  in bench (show n)  $ whnfIO (intsetNative 0 n v)
                     ]
+  , bgroup "native-div" [ let n = 1000;         !v = generateInts 0 n (fromIntegral n)  in bench (show n)  $ whnfIO (intsetNativeDiv 0 n v)
+                        , let n = 10*1000;      !v = generateInts 0 n (fromIntegral n)  in bench (show n)  $ whnfIO (intsetNativeDiv 0 n v)
+                        , let n = 100*1000;     !v = generateInts 0 n (fromIntegral n)  in bench (show n)  $ whnfIO (intsetNativeDiv 0 n v)
+                        , let n = 1000*1000;    !v = generateInts 0 n (fromIntegral n)  in bench (show n)  $ whnfIO (intsetNativeDiv 0 n v)
+                        , let n = 10*1000*1000; !v = generateInts 0 n (fromIntegral n)  in bench (show n)  $ whnfIO (intsetNativeDiv 0 n v)
+                        ]
   , bgroup "ghc" [ let n = 1000;         !v = generateInts 0 n (fromIntegral n)  in bench (show n)  $ whnfIO (intsetGHC 0 n v)
                  , let n = 10*1000;      !v = generateInts 0 n (fromIntegral n)  in bench (show n)  $ whnfIO (intsetGHC 0 n v)
                  , let n = 100*1000;     !v = generateInts 0 n (fromIntegral n)  in bench (show n)  $ whnfIO (intsetGHC 0 n v)
@@ -49,11 +56,12 @@ main = defaultMain [
                  , let n = 10*1000;      !v = generateInts 0 n (fromIntegral n) in bench (show n) $ whnfIO (intsetSet v)
                  , let n = 100*1000;     !v = generateInts 0 n (fromIntegral n) in bench (show n) $ whnfIO (intsetSet v)
                  , let n = 1000*1000;    !v = generateInts 0 n (fromIntegral n) in bench (show n) $ whnfIO (intsetSet v)
+                 , let n = 10*1000*1000; !v = generateInts 0 n (fromIntegral n) in bench (show n) $ whnfIO (intsetSet v)
                  ]
   , bgroup "hashset" [ let n = 1000;         !v = generateInts 0 n (fromIntegral n) in bench (show n) $ whnfIO (intsetHashSet v)
                      , let n = 10*1000;      !v = generateInts 0 n (fromIntegral n) in bench (show n) $ whnfIO (intsetHashSet v)
                      , let n = 100*1000;     !v = generateInts 0 n (fromIntegral n) in bench (show n) $ whnfIO (intsetHashSet v)
-                     , let n = 1000*1000;    !v = generateInts 0 n (fromIntegral n) in bench (show n) $ whnfIO (intsetHashSet v)
+                     , let n = 10*1000*1000; !v = generateInts 0 n (fromIntegral n) in bench (show n) $ whnfIO (intsetHashSet v)
                      ]
   ]
 
@@ -65,6 +73,18 @@ intsetFFI minB maxB xs = bracket (FFI.new minB maxB 100) FFI.free $ \s ->
     forM_ xs $ \i -> do
         FFI.add s i
         f <- FFI.check s i
+        unless f $
+            throwIO $ userError "implementation errors"
+
+intsetNativeDiv :: Word64
+                -> Word64
+                -> Vector Word64
+                -> IO ()
+intsetNativeDiv minB maxB xs = do
+    s <- NativeDiv.new minB maxB
+    forM_ xs $ \i -> do
+        NativeDiv.add s i
+        f <- NativeDiv.check s i
         unless f $
             throwIO $ userError "implementation errors"
 

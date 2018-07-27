@@ -1,6 +1,6 @@
 {-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE MagicHash #-}
-module Data.IntSet.Native (
+module Data.IntSet.NativeDiv (
   -- * Types
   IntSet
 
@@ -48,8 +48,8 @@ add :: PrimMonad m => IntSet (PrimState m) -> Word64 -> m ()
 add !set !n =
     if n >= intSetMinBound# set && n <= intSetMaxBound# set then do
         let !n' = n - intSetMinBound# set
-        let !o    = fromIntegral $ n' `shiftR` 6
-        let !i    = fromIntegral $ n' .&. 63
+        let !o    = fromIntegral $ n' `div` 64
+        let !i    = fromIntegral $ n' `rem` 64
         let !mask = (1 :: Word64) `shiftL` i
         b <- readByteArray (intSetInBounds# set) o
         let !b' = b .|. mask
@@ -65,8 +65,8 @@ check :: PrimMonad m => IntSet (PrimState m) -> Word64 -> m Bool
 check !set !n =
     if n >= intSetMinBound# set && n <= intSetMaxBound# set then do
         let !n' = n - intSetMinBound# set
-        let !o    = fromIntegral $ n' `shiftR` 6
-        let !i    = fromIntegral $ n' .&. 63
+        let !o    = fromIntegral $ n' `div` 64
+        let !i    = fromIntegral $ n' `rem` 64
         let !mask = (1 :: Word64) `shiftL` i
         b <- readByteArray (intSetInBounds# set) o
         return $! (b .&. mask) /= 0

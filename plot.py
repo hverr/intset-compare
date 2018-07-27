@@ -13,8 +13,9 @@ BGROUPS = [
     'set',
     'hashset',
     'containers',
-    'native',
+    'native-div',
     'ghc',
+    'native',
     'ffi',
     ]
 
