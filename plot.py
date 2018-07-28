@@ -4,19 +4,20 @@ from __future__ import print_function, division
 
 import json
 import numpy as np
+import sys
 
 import matplotlib.pyplot as plt
 
 FILE = 'bench.json'
 
 BGROUPS = [
-    'set',
-    'hashset',
-    'containers',
-    'native-div',
-    'ghc',
-    'native',
-    'ffi',
+    ('set'        , 'Data.Set Word64'),
+    ('hashset'    , 'Data.HashSet Word64'),
+    ('containers' , 'Data.IntSet'),
+    ('ffi'        , 'C/FFI'),
+    ('native-div' , 'Data.Primitive.ByteArray (with div/rem)'),
+    ('native'     , 'Data.Primitive.ByteArray (with shift/and)'),
+    ('ghc'        , 'Using GHC.Exts (with shift/and)'),
     ]
 
 class Report(object):
@@ -62,7 +63,7 @@ class AnalysisMean(object):
                    ci_level=e['confIntCL'])
 
 
-def main():
+def main(to_plot='summary'):
     # Read in JSON file
     with open(FILE) as fp:
         o = json.load(fp)
@@ -78,8 +79,21 @@ def main():
     for g in bench.iterkeys():
         bench[g].sort(key=lambda b: int(b.configuration()))
 
+    # Plot
+    if to_plot == 'summary':
+        plot(bench)
+    elif to_plot == 'all':
+        plot_naive(bench)
+        plot_native_div(bench)
+        plot_native_fast(bench)
+        plot(bench)
+
+    else:
+        raise ValueError('unknown to_plot value: {}'.format(to_plot))
+
+def plot(bench, bgroups=BGROUPS):
     # Extract indices
-    all_configs = sorted(set(b.configuration() for b in bench_list))
+    all_configs = sorted(set(b.configuration() for bs in bench.itervalues() for b in bs))
     all_configs = dict(zip(all_configs, np.arange(len(all_configs))))
 
     # Make the plot
@@ -87,13 +101,13 @@ def main():
     offset = 0
     fig, ax = plt.subplots()
     groups = []
-    for g in BGROUPS:
+    for g, gn in bgroups:
         try:
             bs = bench[g]
         except KeyError:
             continue
 
-        groups.append(g)
+        groups.append(gn)
         ind = np.array([all_configs[b.configuration()] for b in bs])
         means = [b.analysis.mean.value for b in bs]
         p = ax.bar(ind + offset, means, width)
@@ -116,7 +130,7 @@ def main():
     ax.set_yscale('log')
     ax.set_ylabel('Seconds')
     ax.yaxis.set_major_formatter(plt.FuncFormatter(fmt_duration))
-    ax.set_xticks(ind + offset / 2)
+    ax.set_xticks(ind + (offset - width) / 2)
     ax.set_xticklabels([pretty_label(l) for l in sorted(all_configs.keys())])
     ax.set_xlabel('Size of the set')
     ax.autoscale_view()
@@ -125,6 +139,25 @@ def main():
 
     plt.show()
 
+def plot_naive(bench):
+    bgroups = [b for b in BGROUPS if b[0] in ['set', 'hashset', 'containers']]
+    return plot(bench, bgroups)
+
+def plot_ffi(bench):
+    bgroups = [b for b in BGROUPS if b[0] in ['set', 'hashset', 'containers', 'ffi']]
+    return plot(bench, bgroups)
+
+def plot_native_div(bench):
+    bgroups = [b for b in BGROUPS if b[0] in ['ffi', 'native-div']]
+    return plot(bench, bgroups)
+
+def plot_native_fast(bench):
+    bgroups = [b for b in BGROUPS if b[0] in ['ffi', 'native-div', 'native', 'ghc']]
+    return plot(bench, bgroups)
 
 if __name__ == "__main__":
-    main()
+    try:
+        to_plot = sys.argv[1]
+    except IndexError:
+        to_plot = 'summary'
+    main(to_plot)
