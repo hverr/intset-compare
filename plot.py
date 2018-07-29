@@ -111,10 +111,12 @@ def plot(bench, bgroups=BGROUPS, name='all'):
     all_configs = dict(zip(all_configs, np.arange(len(all_configs))))
 
     # Make the plot
-    width = 0.7/len(bench)
+    width = 0.95/len(bench)
     offset = 0
     fig, ax = plt.subplots()
+    #fig.set_size_inches(8, 5)
     groups = []
+    plots = []
     for g, gn in bgroups:
         try:
             bs = bench[g]
@@ -125,11 +127,12 @@ def plot(bench, bgroups=BGROUPS, name='all'):
         ind = np.array([all_configs[b.configuration()] for b in bs])
         means = [b.analysis.mean.value for b in bs]
         p = ax.bar(ind + offset, means, width)
+        plots.append(p)
         offset += width
 
     pretty_label = lambda l: '{:,}'.format(int(l)).replace(',', ' ')
 
-    def fmt_duration(value, _tick_number):
+    def fmt_duration(value, _tick_number, str=str):
         if value < 0.001:
             return str(value*1000*1000) + u" µs"
         elif value < 1:
@@ -143,7 +146,7 @@ def plot(bench, bgroups=BGROUPS, name='all'):
     ax.grid(True, ls='dashed', alpha=0.9)
     ax.set_yscale('log')
     ax.set_ylabel('Seconds')
-    ax.set_ylim(ymin=0.000001)
+    ax.set_ylim(ymin=0.000001, ymax=1000)
     ax.yaxis.set_major_formatter(plt.FuncFormatter(fmt_duration))
     ax.set_xticks(ind + (offset - width) / 2)
     ax.set_xticklabels([pretty_label(l) for l in sorted(all_configs.keys())])
@@ -151,6 +154,22 @@ def plot(bench, bgroups=BGROUPS, name='all'):
     ax.autoscale_view()
 
     ax.legend(groups)
+
+    for j, p in enumerate(plots):
+        for i, rect in enumerate(p):
+            if i not in [3]:
+                continue
+            rect = p[i]
+
+            max_h = plots[0][i].get_height()
+            f = max_h / plots[1][i].get_height()
+            max_h /= f**j
+
+            h = rect.get_height()
+            t = fmt_duration(h, None, lambda x: '{:.1f}'.format(x))
+            ax.text(rect.get_x() + 0*rect.get_width()/2, max_h*1.20, t,
+                    ha='left', va='bottom', rotation=45)
+            max_h /= f
 
     save_figure(fig, name)
 
