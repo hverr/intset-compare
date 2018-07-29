@@ -4,7 +4,20 @@ from __future__ import print_function, division
 
 import json
 import numpy as np
+import os
 import sys
+
+import matplotlib
+PLOT_FORMAT = os.environ.get('PLOT_FORMAT', 'interactive')
+if PLOT_FORMAT == 'interactive':
+    def save_figure(fig, name):
+        plt.show()
+
+elif PLOT_FORMAT == 'svg':
+    def save_figure(fig, name):
+        fig.savefig('plots/{}.svg'.format(name))
+else:
+    raise ValueError('unknown PLOT_FORMAT value: {}'.format(PLOT_FORMAT))
 
 import matplotlib.pyplot as plt
 
@@ -15,9 +28,9 @@ BGROUPS = [
     ('hashset'    , 'Data.HashSet Word64'),
     ('containers' , 'Data.IntSet'),
     ('ffi'        , 'C/FFI'),
-    ('native-div' , 'Data.Primitive.ByteArray (with div/rem)'),
-    ('native'     , 'Data.Primitive.ByteArray (with shift/and)'),
-    ('ghc'        , 'Using GHC.Exts (with shift/and)'),
+    ('native-div' , 'Data.Primitive (with div/rem)'),
+    ('native'     , 'Data.Primitive (with shift/and)'),
+    #('ghc'        , 'Using GHC.Exts (with shift/and)'),
     ]
 
 class Report(object):
@@ -84,6 +97,7 @@ def main(to_plot='summary'):
         plot(bench)
     elif to_plot == 'all':
         plot_naive(bench)
+        plot_ffi(bench)
         plot_native_div(bench)
         plot_native_fast(bench)
         plot(bench)
@@ -91,7 +105,7 @@ def main(to_plot='summary'):
     else:
         raise ValueError('unknown to_plot value: {}'.format(to_plot))
 
-def plot(bench, bgroups=BGROUPS):
+def plot(bench, bgroups=BGROUPS, name='all'):
     # Extract indices
     all_configs = sorted(set(b.configuration() for bs in bench.itervalues() for b in bs))
     all_configs = dict(zip(all_configs, np.arange(len(all_configs))))
@@ -129,6 +143,7 @@ def plot(bench, bgroups=BGROUPS):
     ax.grid(True, ls='dashed', alpha=0.9)
     ax.set_yscale('log')
     ax.set_ylabel('Seconds')
+    ax.set_ylim(ymin=0.000001)
     ax.yaxis.set_major_formatter(plt.FuncFormatter(fmt_duration))
     ax.set_xticks(ind + (offset - width) / 2)
     ax.set_xticklabels([pretty_label(l) for l in sorted(all_configs.keys())])
@@ -137,23 +152,23 @@ def plot(bench, bgroups=BGROUPS):
 
     ax.legend(groups)
 
-    plt.show()
+    save_figure(fig, name)
 
 def plot_naive(bench):
     bgroups = [b for b in BGROUPS if b[0] in ['set', 'hashset', 'containers']]
-    return plot(bench, bgroups)
+    return plot(bench, bgroups, 'naive')
 
 def plot_ffi(bench):
     bgroups = [b for b in BGROUPS if b[0] in ['set', 'hashset', 'containers', 'ffi']]
-    return plot(bench, bgroups)
+    return plot(bench, bgroups, 'ffi')
 
 def plot_native_div(bench):
-    bgroups = [b for b in BGROUPS if b[0] in ['ffi', 'native-div']]
-    return plot(bench, bgroups)
+    bgroups = [b for b in BGROUPS if b[0] in ['containers', 'ffi', 'native-div']]
+    return plot(bench, bgroups, 'native-div')
 
 def plot_native_fast(bench):
-    bgroups = [b for b in BGROUPS if b[0] in ['ffi', 'native-div', 'native', 'ghc']]
-    return plot(bench, bgroups)
+    bgroups = [b for b in BGROUPS if b[0] in ['containers', 'ffi', 'native-div', 'native']]
+    return plot(bench, bgroups, 'native-fast')
 
 if __name__ == "__main__":
     try:
