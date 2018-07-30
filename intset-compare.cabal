@@ -31,9 +31,9 @@ library
   ghc-options:          -Wall
   c-sources:            src-c/intset.c
 
-test-suite intset-ffi-test
+test-suite intset-test
   type:                 exitcode-stdio-1.0
-  hs-source-dirs:       test-ffi
+  hs-source-dirs:       test
   main-is:              TestIntSet.hs
   build-depends:        base
                       , intset-compare
@@ -43,9 +43,9 @@ test-suite intset-ffi-test
   ghc-options:          -threaded -rtsopts -with-rtsopts=-N -Wall
   default-language:     Haskell2010
 
-benchmark intset-ffi-bench
+benchmark intset-bench
   type:                 exitcode-stdio-1.0
-  hs-source-dirs:       bench-ffi
+  hs-source-dirs:       bench
   main-is:              Bench.hs
   build-depends:        base
                       , intset-compare
