@@ -30,8 +30,10 @@ BGROUPS = [
     ('ffi'        , 'C/FFI'),
     ('native-div' , 'Data.Primitive (with div/rem)'),
     ('native'     , 'Data.Primitive (with shift/and)'),
-    #('ghc'        , 'Using GHC.Exts (with shift/and)'),
+    ('ghc'        , 'Using GHC.Exts (with shift/and)'),
     ]
+
+BGROUPS_NO_GHC = [b for b in BGROUPS if b[0] != 'ghc']
 
 class Report(object):
     def __init__(self, name, analysis):
@@ -100,12 +102,13 @@ def main(to_plot='summary'):
         plot_ffi(bench)
         plot_native_div(bench)
         plot_native_fast(bench)
+        plot_ghc(bench)
         plot(bench)
 
     else:
         raise ValueError('unknown to_plot value: {}'.format(to_plot))
 
-def plot(bench, bgroups=BGROUPS, name='all'):
+def plot(bench, bgroups=BGROUPS_NO_GHC, name='all'):
     # Extract indices
     all_configs = sorted(set(b.configuration() for bs in bench.itervalues() for b in bs))
     all_configs = dict(zip(all_configs, np.arange(len(all_configs))))
@@ -189,6 +192,9 @@ def plot_native_div(bench):
 def plot_native_fast(bench):
     bgroups = [b for b in BGROUPS if b[0] in ['set', 'hashset', 'containers', 'ffi', 'native-div', 'native']]
     return plot(bench, bgroups, 'native-fast')
+
+def plot_ghc(bench):
+    return plot(bench, BGROUPS, 'ghc')
 
 if __name__ == "__main__":
     try:
