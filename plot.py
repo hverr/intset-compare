@@ -162,7 +162,8 @@ def plot(bench, bgroups=BGROUPS, name='all'):
             rect = p[i]
 
             max_h = plots[0][i].get_height()
-            f = max_h / plots[1][i].get_height()
+            #f = max_h / plots[1][i].get_height()
+            f = 2
             max_h /= f**j
 
             h = rect.get_height()
@@ -182,11 +183,11 @@ def plot_ffi(bench):
     return plot(bench, bgroups, 'ffi')
 
 def plot_native_div(bench):
-    bgroups = [b for b in BGROUPS if b[0] in ['containers', 'ffi', 'native-div']]
+    bgroups = [b for b in BGROUPS if b[0] in ['set', 'hashset', 'containers', 'ffi', 'native-div']]
     return plot(bench, bgroups, 'native-div')
 
 def plot_native_fast(bench):
-    bgroups = [b for b in BGROUPS if b[0] in ['containers', 'ffi', 'native-div', 'native']]
+    bgroups = [b for b in BGROUPS if b[0] in ['set', 'hashset', 'containers', 'ffi', 'native-div', 'native']]
     return plot(bench, bgroups, 'native-fast')
 
 if __name__ == "__main__":
