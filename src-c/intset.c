@@ -49,7 +49,7 @@ void free_int_set(int_set_t *set) {
 void _int_set_add_in_bounds(int_set_t *set, uint64_t n) {
     uint64_t o = n / 64;
     uint64_t i = n % 64;
-    uint64_t mask = 1 << i;
+    uint64_t mask = (uint64_t)1 << i;
     set->in_bounds[o] |= mask;
 }
 
@@ -78,7 +78,7 @@ void int_set_add(int_set_t *set, uint64_t n) {
 bool _int_set_check_in_bounds(int_set_t *set, uint64_t n) {
     uint64_t o = n / 64;
     uint64_t i = n % 64;
-    uint64_t mask = 1 << i;
+    uint64_t mask = (uint64_t)1 << i;
     return ((set->in_bounds[o] & mask) != 0);
 }
 
