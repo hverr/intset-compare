@@ -30,6 +30,7 @@ BGROUPS = [
     ('ffi'        , 'C/FFI'),
     ('native-div' , 'Data.Primitive (with div/rem)'),
     ('native'     , 'Data.Primitive (with shift/and)'),
+    ('native-us'  , 'Data.Primitive (with unsafe shift/and)'),
     ('ghc'        , 'Using GHC.Exts (with shift/and)'),
     ]
 
@@ -190,7 +191,7 @@ def plot_native_div(bench):
     return plot(bench, bgroups, 'native-div')
 
 def plot_native_fast(bench):
-    bgroups = [b for b in BGROUPS if b[0] in ['set', 'hashset', 'containers', 'ffi', 'native-div', 'native']]
+    bgroups = [b for b in BGROUPS if b[0] in ['set', 'hashset', 'containers', 'ffi', 'native-div', 'native', 'native-us']]
     return plot(bench, bgroups, 'native-fast')
 
 def plot_ghc(bench):

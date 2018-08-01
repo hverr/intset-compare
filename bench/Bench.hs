@@ -16,6 +16,7 @@ import qualified Data.IntSet.FFI as FFI
 import qualified Data.IntSet.GHC as ISGHC
 import qualified Data.IntSet.Native as Native
 import qualified Data.IntSet.NativeDiv as NativeDiv
+import qualified Data.IntSet.NativeUS as NativeUS
 import qualified Data.Set as Set
 
 import System.Random
@@ -34,6 +35,12 @@ main = defaultMain [
                     , let n = 1000*1000;    !v = generateInts 0 n (fromIntegral n)  in bench (show n)  $ whnfIO (intsetNative 0 n v)
                     , let n = 10*1000*1000; !v = generateInts 0 n (fromIntegral n)  in bench (show n)  $ whnfIO (intsetNative 0 n v)
                     ]
+  , bgroup "native-us" [ let n = 1000;         !v = generateInts 0 n (fromIntegral n)  in bench (show n)  $ whnfIO (intsetNativeUS 0 n v)
+                       , let n = 10*1000;      !v = generateInts 0 n (fromIntegral n)  in bench (show n)  $ whnfIO (intsetNativeUS 0 n v)
+                       , let n = 100*1000;     !v = generateInts 0 n (fromIntegral n)  in bench (show n)  $ whnfIO (intsetNativeUS 0 n v)
+                       , let n = 1000*1000;    !v = generateInts 0 n (fromIntegral n)  in bench (show n)  $ whnfIO (intsetNativeUS 0 n v)
+                       , let n = 10*1000*1000; !v = generateInts 0 n (fromIntegral n)  in bench (show n)  $ whnfIO (intsetNativeUS 0 n v)
+                       ]
   , bgroup "native-div" [ let n = 1000;         !v = generateInts 0 n (fromIntegral n)  in bench (show n)  $ whnfIO (intsetNativeDiv 0 n v)
                         , let n = 10*1000;      !v = generateInts 0 n (fromIntegral n)  in bench (show n)  $ whnfIO (intsetNativeDiv 0 n v)
                         , let n = 100*1000;     !v = generateInts 0 n (fromIntegral n)  in bench (show n)  $ whnfIO (intsetNativeDiv 0 n v)
@@ -98,6 +105,18 @@ intsetNative minB maxB xs = do
     forM_ xs $ \i -> do
         Native.add s i
         f <- Native.check s i
+        unless f $
+            throwIO $ userError "implementation errors"
+
+intsetNativeUS :: Word64
+             -> Word64
+             -> Vector Word64
+             -> IO ()
+intsetNativeUS minB maxB xs = do
+    s <- NativeUS.new minB maxB
+    forM_ xs $ \i -> do
+        NativeUS.add s i
+        f <- NativeUS.check s i
         unless f $
             throwIO $ userError "implementation errors"
 

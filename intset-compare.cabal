@@ -23,6 +23,7 @@ library
                       , Data.IntSet.FFI.C
                       , Data.IntSet.GHC
                       , Data.IntSet.Native
+                      , Data.IntSet.NativeUS
                       , Data.IntSet.NativeDiv
   build-depends:        base >=4.7 && <5
                       , containers
